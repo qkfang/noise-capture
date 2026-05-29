@@ -12,5 +12,22 @@
     ],
     "note": "sdf",
     "continuedFromLast": true
+  },
+  {
+    "recordedAtSydney": "2026-05-29T12:15:00+10:00",
+    "noiseSources": [
+      "Club roof vent",
+      "A/C units",
+      "Wall vent"
+    ],
+    "intensity": "High",
+    "loudness": "Annoying",
+    "tone": "Continuous",
+    "locations": [
+      "Living room",
+      "Bedroom"
+    ],
+    "note": "sdf",
+    "continuedFromLast": true
   }
 ]
