@@ -59,6 +59,7 @@ public sealed class EditModel(INoiseLogStore noiseLogStore) : PageModel
             Tone = entry.Tone,
             Locations = [.. entry.Locations],
             Note = entry.Note,
+            Weather = entry.Weather,
             ContinuedFromLast = entry.ContinuedFromLast
         };
 
@@ -126,6 +127,7 @@ public sealed class EditModel(INoiseLogStore noiseLogStore) : PageModel
             Tone = Input.Tone,
             Locations = Input.Locations,
             Note = Input.Note?.Trim() ?? string.Empty,
+            Weather = string.IsNullOrWhiteSpace(Input.Weather) ? null : Input.Weather.Trim(),
             ContinuedFromLast = Input.ContinuedFromLast
         };
 

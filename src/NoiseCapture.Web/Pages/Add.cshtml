@@ -110,6 +110,12 @@
         </div>
 
         <div class="col-12 form-field form-field-b">
+            <label asp-for="Input.Weather" class="form-label"></label>
+            <input asp-for="Input.Weather" class="form-control" placeholder="e.g. Clear, rainy, windy" />
+            <span asp-validation-for="Input.Weather" class="text-danger"></span>
+        </div>
+
+        <div class="col-12 form-field form-field-b">
             <label asp-for="Input.Note" class="form-label">How it impact you <span class="text-muted small">(optional)</span></label>
             <textarea asp-for="Input.Note" class="form-control" rows="4" placeholder="Describe how this noise impacts you"></textarea>
             <span asp-validation-for="Input.Note" class="text-danger"></span>

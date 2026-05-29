@@ -96,6 +96,7 @@ public sealed class AddModel(INoiseLogStore noiseLogStore) : PageModel
             Tone = Input.Tone,
             Locations = Input.Locations,
             Note = Input.Note?.Trim() ?? string.Empty,
+            Weather = string.IsNullOrWhiteSpace(Input.Weather) ? null : Input.Weather.Trim(),
             ContinuedFromLast = Input.ContinuedFromLast
         };
 
@@ -119,6 +120,7 @@ public sealed class AddModel(INoiseLogStore noiseLogStore) : PageModel
                 Tone = ToneOptions[0],
                 Locations = [Locations[0]],
                 Note = string.Empty,
+                Weather = null,
                 ContinuedFromLast = false
             };
 
@@ -134,6 +136,7 @@ public sealed class AddModel(INoiseLogStore noiseLogStore) : PageModel
             Tone = ToneOptions.Contains(lastEntry.Tone) ? lastEntry.Tone : ToneOptions[0],
             Locations = [.. lastEntry.Locations],
             Note = lastEntry.Note,
+            Weather = lastEntry.Weather,
             ContinuedFromLast = false
         };
     }

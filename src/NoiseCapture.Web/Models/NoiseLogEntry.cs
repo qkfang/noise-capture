@@ -16,5 +16,7 @@ public sealed class NoiseLogEntry
 
     public string Note { get; init; } = string.Empty;
 
+    public string? Weather { get; init; }
+
     public bool ContinuedFromLast { get; init; }
 }

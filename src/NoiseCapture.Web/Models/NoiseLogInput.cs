@@ -27,7 +27,11 @@ public sealed class NoiseLogInput
 
     [Display(Name = "How it impact you")]
     [StringLength(2000)]
-    public string Note { get; set; } = string.Empty;
+    public string? Note { get; set; }
+
+    [Display(Name = "Weather")]
+    [StringLength(200)]
+    public string? Weather { get; set; }
 
     [Display(Name = "Continued from last entry")]
     public bool ContinuedFromLast { get; set; }
