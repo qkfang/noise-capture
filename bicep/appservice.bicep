@@ -1,8 +1,11 @@
 @description('Azure location')
 param location string
 
-@description('Base name for resources')
-param baseName string
+@description('Web App name')
+param webAppName string
+
+@description('App Service plan name')
+param appServicePlanName string
 
 @description('SKU for App Service plan')
 param appServiceSku string
@@ -18,9 +21,6 @@ param logsContainerName string
 
 @description('Folder path for local JSON persistence')
 param localDataFolder string = '/home/site/data'
-
-var appServicePlanName = '${baseName}-plan'
-var webAppName = '${baseName}-web-${uniqueString(resourceGroup().id)}'
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   name: appServicePlanName
@@ -49,7 +49,7 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
         }
         {
           name: 'NoiseStorage__AccountUrl'
-          value: 'https://${storageAccountName}.blob.core.windows.net'
+          value: 'https://${storageAccountName}.blob.${environment().suffixes.storage}'
         }
         {
           name: 'NoiseStorage__ContainerName'

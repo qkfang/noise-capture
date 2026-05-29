@@ -1,16 +1,14 @@
 @description('Azure location')
 param location string
 
-@description('Base name for resources')
-param baseName string
+@description('Storage account name')
+param storageAccountName string
 
 @description('Blob container name for noise logs')
 param logsContainerName string = 'noise-logs'
 
-var storageName = toLower('${baseName}${uniqueString(resourceGroup().id)}')
-
 resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
-  name: storageName
+  name: storageAccountName
   location: location
   sku: {
     name: 'Standard_LRS'

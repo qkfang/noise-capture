@@ -17,11 +17,19 @@ param appServiceSku string = 'B1'
 @description('Blob container name for noise log files')
 param logsContainerName string = 'noise-logs'
 
+var uniqueSuffix = uniqueString(resourceGroup().id)
+var logAnalyticsName = '${baseName}-law-${uniqueSuffix}'
+var appInsightsName = '${baseName}-appi-${uniqueSuffix}'
+var storageAccountName = toLower('${baseName}${uniqueSuffix}')
+var appServicePlanName = '${baseName}-plan'
+var webAppName = '${baseName}-web-${uniqueSuffix}'
+
 module monitoring 'monitoring.bicep' = {
   name: 'monitoring'
   params: {
     location: location
-    baseName: baseName
+    logAnalyticsName: logAnalyticsName
+    appInsightsName: appInsightsName
   }
 }
 
@@ -29,7 +37,7 @@ module storage 'storage.bicep' = {
   name: 'storage'
   params: {
     location: location
-    baseName: baseName
+    storageAccountName: storageAccountName
     logsContainerName: logsContainerName
   }
 }
@@ -38,17 +46,22 @@ module appService 'appservice.bicep' = {
   name: 'appservice'
   params: {
     location: location
-    baseName: baseName
+    webAppName: webAppName
+    appServicePlanName: appServicePlanName
     appServiceSku: appServiceSku
     appInsightsConnectionString: monitoring.outputs.appInsightsConnectionString
-    storageAccountName: storage.outputs.storageAccountName
-    logsContainerName: storage.outputs.logsContainerName
+    storageAccountName: storageAccountName
+    logsContainerName: logsContainerName
   }
 }
 
+resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' existing = {
+  name: storageAccountName
+}
+
 resource blobDataContributorAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: resourceId('Microsoft.Storage/storageAccounts', storage.outputs.storageAccountName)
-  name: guid(storage.outputs.storageAccountId, appService.outputs.principalId, 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
+  scope: storageAccount
+  name: guid(storageAccountName, webAppName, 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
     principalId: appService.outputs.principalId
