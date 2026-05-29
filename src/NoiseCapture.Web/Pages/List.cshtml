@@ -65,7 +65,7 @@
                             </td>
                         </tr>
                         <tr class="@noteClass">
-                            <td colspan="6" class="small">
+                            <td colspan="7" class="small">
                                 <strong>Sources:</strong>
                                 @(entry.NoiseSources.Count == 0 ? "—" : string.Join(", ", entry.NoiseSources))
                                 &nbsp;&nbsp;
@@ -74,7 +74,7 @@
                             </td>
                         </tr>
                         <tr class="@noteClass">
-                            <td colspan="6" class="small text-muted">
+                            <td colspan="7" class="small text-muted">
                                 <strong>How it impacts you:</strong>
                                 @(string.IsNullOrWhiteSpace(entry.Note) ? "—" : entry.Note)
                             </td>
