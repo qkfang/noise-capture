@@ -1,18 +1,18 @@
 @page
-@model IndexModel
+@model ListModel
 @{
-    ViewData["Title"] = "Recent entries";
+    ViewData["Title"] = "All entries";
 }
 
 <section>
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <div>
-            <h1 class="h3 mb-1">Recent noise entries</h1>
-            <p class="text-muted mb-0">Showing the latest @Model.Entries.Count of up to 20 entries.</p>
+            <h1 class="h3 mb-1">All noise entries</h1>
+            <p class="text-muted mb-0">Total: @Model.Entries.Count</p>
         </div>
         <div class="d-flex gap-2">
             <a asp-page="/Add" class="btn btn-primary">Add new entry</a>
-            <a asp-page="/List" class="btn btn-outline-secondary">View all</a>
+            <a asp-page="/Index" class="btn btn-outline-secondary">Recent (20)</a>
         </div>
     </div>
 

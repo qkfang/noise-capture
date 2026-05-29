@@ -4,12 +4,12 @@ using NoiseCapture.Web.Services;
 
 namespace NoiseCapture.Web.Pages;
 
-public sealed class IndexModel(INoiseLogStore noiseLogStore) : PageModel
+public sealed class ListModel(INoiseLogStore noiseLogStore) : PageModel
 {
     public IReadOnlyList<NoiseLogEntry> Entries { get; private set; } = [];
 
     public async Task OnGetAsync(CancellationToken cancellationToken)
     {
-        Entries = await noiseLogStore.GetEntriesAsync(cancellationToken, take: 20);
+        Entries = await noiseLogStore.GetEntriesAsync(cancellationToken);
     }
 }

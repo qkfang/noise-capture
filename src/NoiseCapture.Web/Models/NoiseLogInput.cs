@@ -18,8 +18,9 @@ public sealed class NoiseLogInput
     [Required]
     public string Feeling { get; set; } = string.Empty;
 
-    [Required]
-    public string Location { get; set; } = string.Empty;
+    [Display(Name = "Location")]
+    [MinLength(1, ErrorMessage = "Select at least one location.")]
+    public List<string> Locations { get; set; } = [];
 
     [StringLength(2000)]
     public string Note { get; set; } = string.Empty;

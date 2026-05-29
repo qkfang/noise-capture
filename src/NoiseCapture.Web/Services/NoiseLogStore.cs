@@ -40,6 +40,28 @@ public sealed class NoiseLogStore : INoiseLogStore
         }
     }
 
+    public async Task<IReadOnlyList<NoiseLogEntry>> GetEntriesAsync(CancellationToken cancellationToken, int? take = null)
+    {
+        await _lock.WaitAsync(cancellationToken);
+
+        try
+        {
+            var entries = await ReadEntriesAsync(cancellationToken);
+            IEnumerable<NoiseLogEntry> ordered = entries.OrderByDescending(e => e.RecordedAtSydney);
+
+            if (take.HasValue)
+            {
+                ordered = ordered.Take(take.Value);
+            }
+
+            return ordered.ToList();
+        }
+        finally
+        {
+            _lock.Release();
+        }
+    }
+
     public async Task AddEntryAsync(NoiseLogEntry entry, CancellationToken cancellationToken)
     {
         await _lock.WaitAsync(cancellationToken);
