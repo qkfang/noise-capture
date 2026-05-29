@@ -4,7 +4,7 @@ targetScope = 'resourceGroup'
 param location string = resourceGroup().location
 
 @description('Base name for resources')
-param baseName string = 'nc'
+param baseName string = 'noisecap'
 
 @description('SKU for App Service plan')
 @allowed([
@@ -20,7 +20,7 @@ param logsContainerName string = 'noise-logs'
 var uniqueSuffix = uniqueString(resourceGroup().id)
 var logAnalyticsName = '${baseName}-law'
 var appInsightsName = '${baseName}-appi'
-var storageAccountName = toLower('${baseName}')
+var storageAccountName = toLower('${baseName}sa')
 var appServicePlanName = '${baseName}-plan'
 var webAppName = '${baseName}-web'
 
