@@ -1,25 +1,20 @@
 @page
-@model AddModel
+@model EditModel
 @{
-    ViewData["Title"] = "Add noise entry";
+    ViewData["Title"] = "Edit noise entry";
 }
 
 <section class="form-shell">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="h3 mb-0">Add noise entry</h1>
-        <a asp-page="/Index" class="btn btn-outline-secondary btn-sm">Back to recent</a>
+        <h1 class="h3 mb-0">Edit noise entry</h1>
+        <a asp-page="/List" class="btn btn-outline-secondary btn-sm">Back to list</a>
     </div>
-    <p class="text-muted">Record nearby hotel noise impacts for your household.</p>
-
-    @if (Model.Saved)
-    {
-        <div class="alert alert-success" role="alert">
-            Entry saved locally and synced to blob storage.
-        </div>
-    }
+    <p class="text-muted">Update an existing noise entry.</p>
 
     <form method="post" class="row g-3">
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <input type="hidden" asp-for="OriginalRecordedAt" />
 
         <div class="col-12">
             <label asp-for="Input.RecordedAtSydneyLocal" class="form-label"></label>
@@ -116,8 +111,8 @@
         </div>
 
         <div class="col-12 d-grid gap-2 d-sm-flex">
-            <button type="submit" class="btn btn-primary flex-sm-fill">Save entry</button>
-            <button type="reset" class="btn btn-outline-secondary flex-sm-fill">Reset</button>
+            <button type="submit" class="btn btn-primary flex-sm-fill">Save changes</button>
+            <a asp-page="/List" class="btn btn-outline-secondary flex-sm-fill">Cancel</a>
         </div>
     </form>
 </section>

@@ -9,4 +9,10 @@ public interface INoiseLogStore
     Task<IReadOnlyList<NoiseLogEntry>> GetEntriesAsync(CancellationToken cancellationToken, int? take = null);
 
     Task AddEntryAsync(NoiseLogEntry entry, CancellationToken cancellationToken);
+
+    Task<NoiseLogEntry?> GetEntryAsync(DateTimeOffset recordedAtSydney, CancellationToken cancellationToken);
+
+    Task<bool> UpdateEntryAsync(DateTimeOffset originalRecordedAtSydney, NoiseLogEntry updated, CancellationToken cancellationToken);
+
+    Task<bool> DeleteEntryAsync(DateTimeOffset recordedAtSydney, CancellationToken cancellationToken);
 }

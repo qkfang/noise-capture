@@ -16,12 +16,19 @@ public sealed class NoiseLogInput
     public string Intensity { get; set; } = string.Empty;
 
     [Required]
-    public string Feeling { get; set; } = string.Empty;
+    public string Loudness { get; set; } = string.Empty;
+
+    [Required]
+    public string Tone { get; set; } = string.Empty;
 
     [Display(Name = "Location")]
     [MinLength(1, ErrorMessage = "Select at least one location.")]
     public List<string> Locations { get; set; } = [];
 
+    [Display(Name = "How it impact you")]
     [StringLength(2000)]
     public string Note { get; set; } = string.Empty;
+
+    [Display(Name = "Continued from last entry")]
+    public bool ContinuedFromLast { get; set; }
 }

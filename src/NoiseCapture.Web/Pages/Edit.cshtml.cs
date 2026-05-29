@@ -6,7 +6,7 @@ using NoiseCapture.Web.Services;
 
 namespace NoiseCapture.Web.Pages;
 
-public sealed class AddModel(INoiseLogStore noiseLogStore) : PageModel
+public sealed class EditModel(INoiseLogStore noiseLogStore) : PageModel
 {
     private static readonly string[] NoiseSources =
     [
@@ -24,25 +24,55 @@ public sealed class AddModel(INoiseLogStore noiseLogStore) : PageModel
     [BindProperty]
     public NoiseLogInput Input { get; set; } = new();
 
+    [BindProperty]
+    public string OriginalRecordedAt { get; set; } = string.Empty;
+
     public IReadOnlyList<string> NoiseSourceOptions => NoiseSources;
-
     public IReadOnlyList<string> IntensityOptions => IntensityLevels;
-
     public IReadOnlyList<string> LoudnessOptions => LoudnessLevels;
-
     public IReadOnlyList<string> ToneSelectableOptions => ToneOptions;
-
     public IReadOnlyList<string> LocationOptions => Locations;
 
-    public bool Saved { get; private set; }
-
-    public async Task OnGetAsync(CancellationToken cancellationToken)
+    public async Task<IActionResult> OnGetAsync(string recordedAt, CancellationToken cancellationToken)
     {
-        await PrefillAsync(cancellationToken);
+        if (!TryParseRecordedAt(recordedAt, out var parsed))
+        {
+            TempData["StatusMessage"] = "Invalid entry identifier.";
+            return RedirectToPage("/List");
+        }
+
+        var entry = await noiseLogStore.GetEntryAsync(parsed, cancellationToken);
+
+        if (entry is null)
+        {
+            TempData["StatusMessage"] = "Entry not found.";
+            return RedirectToPage("/List");
+        }
+
+        OriginalRecordedAt = entry.RecordedAtSydney.ToString("o", CultureInfo.InvariantCulture);
+        Input = new NoiseLogInput
+        {
+            RecordedAtSydneyLocal = entry.RecordedAtSydney.ToString("yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture),
+            NoiseSources = [.. entry.NoiseSources],
+            Intensity = entry.Intensity,
+            Loudness = entry.Loudness,
+            Tone = entry.Tone,
+            Locations = [.. entry.Locations],
+            Note = entry.Note,
+            ContinuedFromLast = entry.ContinuedFromLast
+        };
+
+        return Page();
     }
 
     public async Task<IActionResult> OnPostAsync(CancellationToken cancellationToken)
     {
+        if (!TryParseRecordedAt(OriginalRecordedAt, out var originalParsed))
+        {
+            ModelState.AddModelError(string.Empty, "Invalid entry identifier.");
+            return Page();
+        }
+
         if (!IsValidOptionSet(Input.NoiseSources, NoiseSources))
         {
             ModelState.AddModelError(nameof(Input.NoiseSources), "Invalid noise source selected.");
@@ -87,7 +117,7 @@ public sealed class AddModel(INoiseLogStore noiseLogStore) : PageModel
         var sydneyTimeZone = ResolveSydneyTimeZone();
         var offset = sydneyTimeZone.GetUtcOffset(localDateTime);
 
-        var entry = new NoiseLogEntry
+        var updated = new NoiseLogEntry
         {
             RecordedAtSydney = new DateTimeOffset(localDateTime, offset),
             NoiseSources = Input.NoiseSources,
@@ -99,59 +129,20 @@ public sealed class AddModel(INoiseLogStore noiseLogStore) : PageModel
             ContinuedFromLast = Input.ContinuedFromLast
         };
 
-        await noiseLogStore.AddEntryAsync(entry, cancellationToken);
+        var ok = await noiseLogStore.UpdateEntryAsync(originalParsed, updated, cancellationToken);
+        TempData["StatusMessage"] = ok ? "Entry updated." : "Entry not found.";
 
         return RedirectToPage("/List");
     }
 
-    private async Task PrefillAsync(CancellationToken cancellationToken)
+    private static bool TryParseRecordedAt(string value, out DateTimeOffset parsed)
     {
-        var lastEntry = await noiseLogStore.GetLastEntryAsync(cancellationToken);
-
-        if (lastEntry is null)
-        {
-            Input = new NoiseLogInput
-            {
-                RecordedAtSydneyLocal = ToLocalDateTimeValue(ToSydneyNow()),
-                NoiseSources = [NoiseSources[0]],
-                Intensity = IntensityLevels[0],
-                Loudness = LoudnessLevels[0],
-                Tone = ToneOptions[0],
-                Locations = [Locations[0]],
-                Note = string.Empty,
-                ContinuedFromLast = false
-            };
-
-            return;
-        }
-
-        Input = new NoiseLogInput
-        {
-            RecordedAtSydneyLocal = ToLocalDateTimeValue(ToSydneyNow()),
-            NoiseSources = [.. lastEntry.NoiseSources],
-            Intensity = IntensityLevels.Contains(lastEntry.Intensity) ? lastEntry.Intensity : IntensityLevels[0],
-            Loudness = LoudnessLevels.Contains(lastEntry.Loudness) ? lastEntry.Loudness : LoudnessLevels[0],
-            Tone = ToneOptions.Contains(lastEntry.Tone) ? lastEntry.Tone : ToneOptions[0],
-            Locations = [.. lastEntry.Locations],
-            Note = lastEntry.Note,
-            ContinuedFromLast = false
-        };
-    }
-
-    private static DateTimeOffset ToSydneyNow()
-    {
-        var sydneyTimeZone = ResolveSydneyTimeZone();
-        return TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, sydneyTimeZone);
+        return DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out parsed);
     }
 
     private static bool IsValidOptionSet(IEnumerable<string> selectedValues, IReadOnlyCollection<string> validValues)
     {
         return selectedValues.All(validValues.Contains);
-    }
-
-    private static string ToLocalDateTimeValue(DateTimeOffset value)
-    {
-        return value.ToString("yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture);
     }
 
     private static TimeZoneInfo ResolveSydneyTimeZone()

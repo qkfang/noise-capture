@@ -31,9 +31,9 @@
                         <th scope="col">When (Sydney)</th>
                         <th scope="col">Sources</th>
                         <th scope="col">Intensity</th>
-                        <th scope="col">Feeling</th>
+                        <th scope="col">Loudness</th>
+                        <th scope="col">Tone</th>
                         <th scope="col">Location</th>
-                        <th scope="col">Note</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -43,9 +43,15 @@
                             <td>@entry.RecordedAtSydney.ToString("yyyy-MM-dd HH:mm")</td>
                             <td>@string.Join(", ", entry.NoiseSources)</td>
                             <td>@entry.Intensity</td>
-                            <td>@entry.Feeling</td>
+                            <td>@entry.Loudness</td>
+                            <td>@entry.Tone</td>
                             <td>@string.Join(", ", entry.Locations)</td>
-                            <td>@entry.Note</td>
+                        </tr>
+                        <tr class="table-light">
+                            <td colspan="6" class="small text-muted">
+                                <strong>How it impacts you:</strong>
+                                @(string.IsNullOrWhiteSpace(entry.Note) ? "—" : entry.Note)
+                            </td>
                         </tr>
                     }
                 </tbody>

@@ -8,9 +8,13 @@ public sealed class NoiseLogEntry
 
     public string Intensity { get; init; } = string.Empty;
 
-    public string Feeling { get; init; } = string.Empty;
+    public string Loudness { get; init; } = string.Empty;
+
+    public string Tone { get; init; } = string.Empty;
 
     public IReadOnlyList<string> Locations { get; init; } = [];
 
     public string Note { get; init; } = string.Empty;
+
+    public bool ContinuedFromLast { get; init; }
 }

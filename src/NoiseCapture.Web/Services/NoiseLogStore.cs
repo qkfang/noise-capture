@@ -83,6 +83,77 @@ public sealed class NoiseLogStore : INoiseLogStore
         }
     }
 
+    public async Task<NoiseLogEntry?> GetEntryAsync(DateTimeOffset recordedAtSydney, CancellationToken cancellationToken)
+    {
+        await _lock.WaitAsync(cancellationToken);
+
+        try
+        {
+            var entries = await ReadEntriesAsync(cancellationToken);
+            return entries.FirstOrDefault(e => e.RecordedAtSydney == recordedAtSydney);
+        }
+        finally
+        {
+            _lock.Release();
+        }
+    }
+
+    public async Task<bool> UpdateEntryAsync(DateTimeOffset originalRecordedAtSydney, NoiseLogEntry updated, CancellationToken cancellationToken)
+    {
+        await _lock.WaitAsync(cancellationToken);
+
+        try
+        {
+            var entries = await ReadEntriesAsync(cancellationToken);
+            var index = entries.FindIndex(e => e.RecordedAtSydney == originalRecordedAtSydney);
+
+            if (index < 0)
+            {
+                return false;
+            }
+
+            entries[index] = updated;
+
+            var json = JsonSerializer.Serialize(entries, JsonOptions);
+            var dataPath = GetLocalDataPath();
+            await File.WriteAllTextAsync(dataPath, json, cancellationToken);
+
+            await UploadToBlobAsync(dataPath, cancellationToken);
+            return true;
+        }
+        finally
+        {
+            _lock.Release();
+        }
+    }
+
+    public async Task<bool> DeleteEntryAsync(DateTimeOffset recordedAtSydney, CancellationToken cancellationToken)
+    {
+        await _lock.WaitAsync(cancellationToken);
+
+        try
+        {
+            var entries = await ReadEntriesAsync(cancellationToken);
+            var removed = entries.RemoveAll(e => e.RecordedAtSydney == recordedAtSydney);
+
+            if (removed == 0)
+            {
+                return false;
+            }
+
+            var json = JsonSerializer.Serialize(entries, JsonOptions);
+            var dataPath = GetLocalDataPath();
+            await File.WriteAllTextAsync(dataPath, json, cancellationToken);
+
+            await UploadToBlobAsync(dataPath, cancellationToken);
+            return true;
+        }
+        finally
+        {
+            _lock.Release();
+        }
+    }
+
     private async Task<List<NoiseLogEntry>> ReadEntriesAsync(CancellationToken cancellationToken)
     {
         var dataPath = GetLocalDataPath();
