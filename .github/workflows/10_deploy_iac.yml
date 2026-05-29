@@ -29,7 +29,7 @@ jobs:
         working-directory: bicep
         run: |
           az deployment group create \
-            --name 'zava-claims-dev' \
+            --name 'noise-capture-dev' \
             --resource-group 'rg-noise-capture' \
             --template-file './main.bicep' \
             --parameters './main.bicepparam'

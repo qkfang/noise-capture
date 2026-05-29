@@ -4,7 +4,7 @@ targetScope = 'resourceGroup'
 param location string = resourceGroup().location
 
 @description('Base name for resources')
-param baseName string = 'noisecapture'
+param baseName string = 'nc'
 
 @description('SKU for App Service plan')
 @allowed([
@@ -12,7 +12,7 @@ param baseName string = 'noisecapture'
   'B1'
   'S1'
 ])
-param appServiceSku string = 'B1'
+param appServiceSku string = 'S1'
 
 @description('Blob container name for noise log files')
 param logsContainerName string = 'noise-logs'
