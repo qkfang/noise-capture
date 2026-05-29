@@ -30,3 +30,33 @@ body {
     border-radius: 0.5rem;
   }
 }
+
+/* Alternating row colors for entry tables (each entry spans two <tr>) */
+.table-entries > tbody > tr.entry-row-a,
+.table-entries > tbody > tr.entry-note-a {
+  background-color: #ffffff;
+}
+
+.table-entries > tbody > tr.entry-row-b,
+.table-entries > tbody > tr.entry-note-b {
+  background-color: #f1f5f9;
+}
+
+.table-entries > tbody > tr.entry-note-a > td,
+.table-entries > tbody > tr.entry-note-b > td {
+  border-top: 0;
+}
+
+/* Alternating row colors for form field groups */
+.form-alt > .form-field {
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+}
+
+.form-alt > .form-field.form-field-a {
+  background-color: #f8fafc;
+}
+
+.form-alt > .form-field.form-field-b {
+  background-color: #e2e8f0;
+}

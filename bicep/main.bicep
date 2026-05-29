@@ -17,6 +17,9 @@ param appServiceSku string = 'S1'
 @description('Blob container name for noise log files')
 param logsContainerName string = 'noise-logs'
 
+@description('Additional principals to grant Storage Blob Data Contributor on the storage account')
+param principals array = []
+
 var uniqueSuffix = uniqueString(resourceGroup().id)
 var logAnalyticsName = '${baseName}-law'
 var appInsightsName = '${baseName}-appi'
@@ -68,6 +71,16 @@ resource blobDataContributorAssignment 'Microsoft.Authorization/roleAssignments@
     principalType: 'ServicePrincipal'
   }
 }
+
+resource principalBlobDataContributorAssignments 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for principal in principals: {
+  scope: storageAccount
+  name: guid(storageAccountName, principal.id, 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
+    principalId: principal.id
+    principalType: principal.principalType
+  }
+}]
 
 output webAppName string = appService.outputs.webAppName
 output storageAccountName string = storage.outputs.storageAccountName
