@@ -43,8 +43,11 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v3
+        uses: azure/cli@v2
         with:
-          app-name: noisecap-web
-          package: ${{ github.workspace }}/app.zip
-          type: zip
+          inlineScript: |
+            az webapp deploy \
+              --resource-group rg-noise-capture \
+              --name noisecap-web \
+              --src-path ${{ github.workspace }}/app.zip \
+              --type zip
