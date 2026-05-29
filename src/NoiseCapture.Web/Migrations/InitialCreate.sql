@@ -20,7 +20,7 @@ BEGIN
         [Intensity] nvarchar(32) NOT NULL,
         [Loudness] nvarchar(32) NOT NULL,
         [Tone] nvarchar(32) NOT NULL,
-        [Note] nvarchar(2000) NOT NULL,
+        [Note] nvarchar(2000) NULL,
         [ContinuedFromLast] bit NOT NULL,
         CONSTRAINT [PK_NoiseLogEntries] PRIMARY KEY ([Id])
     );
@@ -72,5 +72,20 @@ BEGIN
 END;
 
 COMMIT;
+GO
+
+-- Seed sample data
+SET IDENTITY_INSERT [NoiseLogEntries] ON;
+
+INSERT INTO [NoiseLogEntries] ([Id], [RecordedAtSydney], [Intensity], [Loudness], [Tone], [Note], [ContinuedFromLast])
+VALUES
+    (1, '2026-05-29T22:30:00+10:00', 'High',     'Annoying',       'Continuous',   'Loud bass coming through the walls.',             0),
+    (2, '2026-05-28T23:15:00+10:00', 'Moderate', 'Unpleasant',     'Intermittent', 'Roof vent cycling on and off all night.',          0),
+    (3, '2026-05-28T01:00:00+10:00', 'Low',      'Nothing',        'Impulsive',    '',                                                1),
+    (4, '2026-05-26T21:45:00+10:00', 'High',     'Can''t stand',   'Continuous',   'Impossible to sleep with this going all evening.', 0),
+    (5, '2026-05-25T23:00:00+10:00', 'Very Low', 'Nothing',        'Low',          'Barely noticeable tonight.',                      1);
+
+SET IDENTITY_INSERT [NoiseLogEntries] OFF;
+
 GO
 

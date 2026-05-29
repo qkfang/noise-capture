@@ -12,7 +12,9 @@ public sealed class NoiseLogEntryEntity
 
     public string Tone { get; set; } = string.Empty;
 
-    public string Note { get; set; } = string.Empty;
+    public string? Note { get; set; }
+
+    public string? Weather { get; set; }
 
     public bool ContinuedFromLast { get; set; }
 

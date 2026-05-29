@@ -21,7 +21,7 @@ namespace NoiseCapture.Web.Migrations
                     Intensity = table.Column<string>(type: "nvarchar(32)", maxLength: 32, nullable: false),
                     Loudness = table.Column<string>(type: "nvarchar(32)", maxLength: 32, nullable: false),
                     Tone = table.Column<string>(type: "nvarchar(32)", maxLength: 32, nullable: false),
-                    Note = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: false),
+                    Note = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
                     ContinuedFromLast = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>

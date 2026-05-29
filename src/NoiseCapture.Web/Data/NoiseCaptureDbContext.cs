@@ -16,7 +16,8 @@ public sealed class NoiseCaptureDbContext(DbContextOptions<NoiseCaptureDbContext
         entry.Property(item => item.Intensity).HasMaxLength(32).IsRequired();
         entry.Property(item => item.Loudness).HasMaxLength(32).IsRequired();
         entry.Property(item => item.Tone).HasMaxLength(32).IsRequired();
-        entry.Property(item => item.Note).HasMaxLength(2000).IsRequired();
+        entry.Property(item => item.Note).HasMaxLength(2000);
+        entry.Property(item => item.Weather).HasMaxLength(200);
 
         entry.HasMany(item => item.NoiseSources)
             .WithOne(item => item.NoiseLogEntry)

@@ -63,6 +63,7 @@ public sealed class NoiseLogStore(NoiseCaptureDbContext dbContext) : INoiseLogSt
         existing.Loudness = updated.Loudness;
         existing.Tone = updated.Tone;
         existing.Note = updated.Note;
+        existing.Weather = updated.Weather;
         existing.ContinuedFromLast = updated.ContinuedFromLast;
 
         existing.NoiseSources.Clear();
@@ -123,6 +124,7 @@ public sealed class NoiseLogStore(NoiseCaptureDbContext dbContext) : INoiseLogSt
                 .Select(location => location.Value)
                 .ToList(),
             Note = entry.Note,
+            Weather = entry.Weather,
             ContinuedFromLast = entry.ContinuedFromLast
         };
     }
@@ -136,6 +138,7 @@ public sealed class NoiseLogStore(NoiseCaptureDbContext dbContext) : INoiseLogSt
             Loudness = entry.Loudness,
             Tone = entry.Tone,
             Note = entry.Note,
+            Weather = entry.Weather,
             ContinuedFromLast = entry.ContinuedFromLast,
             NoiseSources = entry.NoiseSources
                 .Select((value, index) => new NoiseLogEntryNoiseSourceEntity
