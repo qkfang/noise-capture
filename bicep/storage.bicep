@@ -1,48 +1,32 @@
-@description('Storage account name (3-24 lowercase letters/numbers)')
-param name string
-
-@description('Azure region')
+@description('Azure location')
 param location string
 
-@description('Resource tags')
-param tags object = {}
+@description('Storage account name')
+param storageAccountName string
 
-@description('Storage account SKU')
-param skuName string = 'Standard_LRS'
+@description('Blob container name for noise logs')
+param logsContainerName string = 'noise-logs'
 
 resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
-  name: name
+  name: storageAccountName
   location: location
-  tags: tags
   sku: {
-    name: skuName
+    name: 'Standard_LRS'
   }
   kind: 'StorageV2'
   properties: {
-    accessTier: 'Hot'
-    minimumTlsVersion: 'TLS1_2'
     supportsHttpsTrafficOnly: true
     allowBlobPublicAccess: false
-    allowSharedKeyAccess: true
-    publicNetworkAccess: 'Enabled'
-    networkAcls: {
-      defaultAction: 'Allow'
-      bypass: 'AzureServices'
-    }
   }
 }
 
-resource blobServices 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01' = {
-  parent: storage
-  name: 'default'
+resource logsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
+  name: '${storage.name}/default/${logsContainerName}'
   properties: {
-    deleteRetentionPolicy: {
-      enabled: true
-      days: 7
-    }
+    publicAccess: 'None'
   }
 }
 
-output storageAccountId string = storage.id
 output storageAccountName string = storage.name
-output blobEndpoint string = storage.properties.primaryEndpoints.blob
+output storageAccountId string = storage.id
+output logsContainerName string = logsContainer.name

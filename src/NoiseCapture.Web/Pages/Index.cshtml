@@ -1,0 +1,78 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Noise impact log";
+}
+
+<section class="form-shell">
+    <h1 class="h3 mb-3">Noise impact log</h1>
+    <p class="text-muted">Record nearby hotel noise impacts for your household.</p>
+
+    @if (Model.Saved)
+    {
+        <div class="alert alert-success" role="alert">
+            Entry saved locally and synced to blob storage.
+        </div>
+    }
+
+    <form method="post" class="row g-3">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="col-12">
+            <label asp-for="Input.RecordedAtSydneyLocal" class="form-label"></label>
+            <input asp-for="Input.RecordedAtSydneyLocal" class="form-control" type="datetime-local" />
+            <span asp-validation-for="Input.RecordedAtSydneyLocal" class="text-danger"></span>
+        </div>
+
+        <div class="col-12">
+            <fieldset>
+                <legend class="form-label mb-2">Noise source</legend>
+                <div class="row row-cols-1 row-cols-sm-2 g-2">
+                    @foreach (var option in Model.NoiseSourceOptions)
+                    {
+                        <div class="col">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="Input.NoiseSources" value="@option" checked="@(Model.Input.NoiseSources.Contains(option))" id="source-@option.Replace("/", "-").Replace(" ", "-").ToLowerInvariant()" />
+                                <label class="form-check-label" for="source-@option.Replace("/", "-").Replace(" ", "-").ToLowerInvariant()">@option</label>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <span asp-validation-for="Input.NoiseSources" class="text-danger"></span>
+            </fieldset>
+        </div>
+
+        <div class="col-12 col-sm-6">
+            <label asp-for="Input.Intensity" class="form-label">Intensity</label>
+            <select asp-for="Input.Intensity" class="form-select" asp-items="@(new SelectList(Model.LevelOptions))"></select>
+            <span asp-validation-for="Input.Intensity" class="text-danger"></span>
+        </div>
+
+        <div class="col-12 col-sm-6">
+            <label asp-for="Input.Feeling" class="form-label">Feeling</label>
+            <select asp-for="Input.Feeling" class="form-select" asp-items="@(new SelectList(Model.LevelOptions))"></select>
+            <span asp-validation-for="Input.Feeling" class="text-danger"></span>
+        </div>
+
+        <div class="col-12">
+            <label asp-for="Input.Location" class="form-label">Location</label>
+            <select asp-for="Input.Location" class="form-select" asp-items="@(new SelectList(Model.LocationOptions))"></select>
+            <span asp-validation-for="Input.Location" class="text-danger"></span>
+        </div>
+
+        <div class="col-12">
+            <label asp-for="Input.Note" class="form-label">Note</label>
+            <textarea asp-for="Input.Note" class="form-control" rows="4" placeholder="Add details about the impact"></textarea>
+            <span asp-validation-for="Input.Note" class="text-danger"></span>
+        </div>
+
+        <div class="col-12 d-grid gap-2 d-sm-flex">
+            <button type="submit" class="btn btn-primary flex-sm-fill">Save entry</button>
+            <button type="reset" class="btn btn-outline-secondary flex-sm-fill">Reset</button>
+        </div>
+    </form>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
