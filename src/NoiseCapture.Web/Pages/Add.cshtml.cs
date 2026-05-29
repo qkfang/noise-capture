@@ -84,8 +84,7 @@ public sealed class AddModel(INoiseLogStore noiseLogStore) : PageModel
             return Page();
         }
 
-        var sydneyTimeZone = ResolveSydneyTimeZone();
-        var offset = sydneyTimeZone.GetUtcOffset(localDateTime);
+        var offset = SydneyTime.TimeZone.GetUtcOffset(localDateTime);
 
         var entry = new NoiseLogEntry
         {
@@ -115,8 +114,8 @@ public sealed class AddModel(INoiseLogStore noiseLogStore) : PageModel
             {
                 RecordedAtSydneyLocal = ToLocalDateTimeValue(ToSydneyNow()),
                 NoiseSources = [NoiseSources[0]],
-                Intensity = IntensityLevels[0],
-                Loudness = LoudnessLevels[0],
+                Intensity = IntensityLevels[1],
+                Loudness = LoudnessLevels[1],
                 Tone = ToneOptions[0],
                 Locations = [Locations[0]],
                 Note = null,
@@ -131,8 +130,8 @@ public sealed class AddModel(INoiseLogStore noiseLogStore) : PageModel
         {
             RecordedAtSydneyLocal = ToLocalDateTimeValue(ToSydneyNow()),
             NoiseSources = [.. lastEntry.NoiseSources],
-            Intensity = IntensityLevels.Contains(lastEntry.Intensity) ? lastEntry.Intensity : IntensityLevels[0],
-            Loudness = LoudnessLevels.Contains(lastEntry.Loudness) ? lastEntry.Loudness : LoudnessLevels[0],
+            Intensity = IntensityLevels.Contains(lastEntry.Intensity) ? lastEntry.Intensity : IntensityLevels[1],
+            Loudness = LoudnessLevels.Contains(lastEntry.Loudness) ? lastEntry.Loudness : LoudnessLevels[1],
             Tone = ToneOptions.Contains(lastEntry.Tone) ? lastEntry.Tone : ToneOptions[0],
             Locations = [.. lastEntry.Locations],
             Note = lastEntry.Note,
@@ -141,11 +140,8 @@ public sealed class AddModel(INoiseLogStore noiseLogStore) : PageModel
         };
     }
 
-    private static DateTimeOffset ToSydneyNow()
-    {
-        var sydneyTimeZone = ResolveSydneyTimeZone();
-        return TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, sydneyTimeZone);
-    }
+    private static DateTimeOffset ToSydneyNow() =>
+        SydneyTime.Convert(DateTimeOffset.UtcNow);
 
     private static bool IsValidOptionSet(IEnumerable<string> selectedValues, IReadOnlyCollection<string> validValues)
     {
@@ -155,12 +151,5 @@ public sealed class AddModel(INoiseLogStore noiseLogStore) : PageModel
     private static string ToLocalDateTimeValue(DateTimeOffset value)
     {
         return value.ToString("yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture);
-    }
-
-    private static TimeZoneInfo ResolveSydneyTimeZone()
-    {
-        return TimeZoneInfo.TryFindSystemTimeZoneById("Australia/Sydney", out var sydney)
-            ? sydney
-            : TimeZoneInfo.FindSystemTimeZoneById("AUS Eastern Standard Time");
     }
 }

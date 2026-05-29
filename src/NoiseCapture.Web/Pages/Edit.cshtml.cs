@@ -115,8 +115,7 @@ public sealed class EditModel(INoiseLogStore noiseLogStore) : PageModel
             return Page();
         }
 
-        var sydneyTimeZone = ResolveSydneyTimeZone();
-        var offset = sydneyTimeZone.GetUtcOffset(localDateTime);
+        var offset = SydneyTime.TimeZone.GetUtcOffset(localDateTime);
 
         var updated = new NoiseLogEntry
         {
@@ -147,10 +146,4 @@ public sealed class EditModel(INoiseLogStore noiseLogStore) : PageModel
         return selectedValues.All(validValues.Contains);
     }
 
-    private static TimeZoneInfo ResolveSydneyTimeZone()
-    {
-        return TimeZoneInfo.TryFindSystemTimeZoneById("Australia/Sydney", out var sydney)
-            ? sydney
-            : TimeZoneInfo.FindSystemTimeZoneById("AUS Eastern Standard Time");
-    }
 }
