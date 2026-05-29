@@ -4,7 +4,9 @@ public sealed class NoiseLogEntryEntity
 {
     public int Id { get; set; }
 
-    public DateTimeOffset RecordedAtSydney { get; set; }
+    public DateTimeOffset RecordedDateTime { get; set; }
+
+    public DateTimeOffset CreateDateTime { get; set; }
 
     public string Intensity { get; set; } = string.Empty;
 

@@ -20,7 +20,7 @@ public sealed class NoiseLogStore(NoiseCaptureDbContext dbContext) : INoiseLogSt
     {
         var query = dbContext.NoiseLogEntries
             .AsNoTracking()
-            .OrderByDescending(entry => entry.RecordedAtSydney)
+            .OrderByDescending(entry => entry.RecordedDateTime)
             .Select(ProjectToModel());
 
         if (take.HasValue)
@@ -37,28 +37,28 @@ public sealed class NoiseLogStore(NoiseCaptureDbContext dbContext) : INoiseLogSt
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<NoiseLogEntry?> GetEntryAsync(DateTimeOffset recordedAtSydney, CancellationToken cancellationToken)
+    public async Task<NoiseLogEntry?> GetEntryAsync(DateTimeOffset recordedDateTime, CancellationToken cancellationToken)
     {
         return await dbContext.NoiseLogEntries
             .AsNoTracking()
-            .Where(entry => entry.RecordedAtSydney == recordedAtSydney)
+            .Where(entry => entry.RecordedDateTime == recordedDateTime)
             .Select(ProjectToModel())
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<bool> UpdateEntryAsync(DateTimeOffset originalRecordedAtSydney, NoiseLogEntry updated, CancellationToken cancellationToken)
+    public async Task<bool> UpdateEntryAsync(DateTimeOffset originalRecordedDateTime, NoiseLogEntry updated, CancellationToken cancellationToken)
     {
         var existing = await dbContext.NoiseLogEntries
             .Include(entry => entry.NoiseSources)
             .Include(entry => entry.Locations)
-            .FirstOrDefaultAsync(entry => entry.RecordedAtSydney == originalRecordedAtSydney, cancellationToken);
+            .FirstOrDefaultAsync(entry => entry.RecordedDateTime == originalRecordedDateTime, cancellationToken);
 
         if (existing is null)
         {
             return false;
         }
 
-        existing.RecordedAtSydney = updated.RecordedAtSydney;
+        existing.RecordedDateTime = updated.RecordedDateTime;
         existing.Intensity = updated.Intensity;
         existing.Loudness = updated.Loudness;
         existing.Tone = updated.Tone;
@@ -92,10 +92,10 @@ public sealed class NoiseLogStore(NoiseCaptureDbContext dbContext) : INoiseLogSt
         return true;
     }
 
-    public async Task<bool> DeleteEntryAsync(DateTimeOffset recordedAtSydney, CancellationToken cancellationToken)
+    public async Task<bool> DeleteEntryAsync(DateTimeOffset recordedDateTime, CancellationToken cancellationToken)
     {
         var existing = await dbContext.NoiseLogEntries
-            .FirstOrDefaultAsync(entry => entry.RecordedAtSydney == recordedAtSydney, cancellationToken);
+            .FirstOrDefaultAsync(entry => entry.RecordedDateTime == recordedDateTime, cancellationToken);
 
         if (existing is null)
         {
@@ -112,7 +112,8 @@ public sealed class NoiseLogStore(NoiseCaptureDbContext dbContext) : INoiseLogSt
         return entry => new NoiseLogEntry
         {
             Id = entry.Id,
-            RecordedAtSydney = entry.RecordedAtSydney,
+            RecordedDateTime = entry.RecordedDateTime,
+            CreateDateTime = entry.CreateDateTime,
             NoiseSources = entry.NoiseSources
                 .OrderBy(noiseSource => noiseSource.SortOrder)
                 .Select(noiseSource => noiseSource.Value)
@@ -134,7 +135,8 @@ public sealed class NoiseLogStore(NoiseCaptureDbContext dbContext) : INoiseLogSt
     {
         return new NoiseLogEntryEntity
         {
-            RecordedAtSydney = entry.RecordedAtSydney,
+            RecordedDateTime = entry.RecordedDateTime,
+            CreateDateTime = DateTimeOffset.UtcNow,
             Intensity = entry.Intensity,
             Loudness = entry.Loudness,
             Tone = entry.Tone,

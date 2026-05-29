@@ -10,9 +10,9 @@ public interface INoiseLogStore
 
     Task AddEntryAsync(NoiseLogEntry entry, CancellationToken cancellationToken);
 
-    Task<NoiseLogEntry?> GetEntryAsync(DateTimeOffset recordedAtSydney, CancellationToken cancellationToken);
+    Task<NoiseLogEntry?> GetEntryAsync(DateTimeOffset recordedDateTime, CancellationToken cancellationToken);
 
-    Task<bool> UpdateEntryAsync(DateTimeOffset originalRecordedAtSydney, NoiseLogEntry updated, CancellationToken cancellationToken);
+    Task<bool> UpdateEntryAsync(DateTimeOffset originalRecordedDateTime, NoiseLogEntry updated, CancellationToken cancellationToken);
 
-    Task<bool> DeleteEntryAsync(DateTimeOffset recordedAtSydney, CancellationToken cancellationToken);
+    Task<bool> DeleteEntryAsync(DateTimeOffset recordedDateTime, CancellationToken cancellationToken);
 }

@@ -6,7 +6,7 @@ public sealed class NoiseLogInput
 {
     [Display(Name = "Date and time (Sydney)")]
     [Required]
-    public string RecordedAtSydneyLocal { get; set; } = string.Empty;
+    public string RecordedDateTimeLocal { get; set; } = string.Empty;
 
     [Display(Name = "Noise source")]
     [MinLength(1, ErrorMessage = "Select at least one noise source.")]

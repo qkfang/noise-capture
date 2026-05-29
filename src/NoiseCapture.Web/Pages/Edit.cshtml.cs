@@ -51,11 +51,11 @@ public sealed class EditModel(INoiseLogStore noiseLogStore) : PageModel
             return RedirectToPage("/List");
         }
 
-        OriginalRecordedAt = entry.RecordedAtSydney.ToString("o", CultureInfo.InvariantCulture);
+        OriginalRecordedAt = entry.RecordedDateTime.ToString("o", CultureInfo.InvariantCulture);
         EntryId = entry.Id;
         Input = new NoiseLogInput
         {
-            RecordedAtSydneyLocal = entry.RecordedAtSydney.ToString("yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture),
+            RecordedDateTimeLocal = entry.RecordedDateTime.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture),
             NoiseSources = [.. entry.NoiseSources],
             Intensity = entry.Intensity,
             Loudness = entry.Loudness,
@@ -108,13 +108,13 @@ public sealed class EditModel(INoiseLogStore noiseLogStore) : PageModel
         }
 
         if (!DateTime.TryParseExact(
-                Input.RecordedAtSydneyLocal,
-                "yyyy-MM-ddTHH:mm",
+                Input.RecordedDateTimeLocal,
+                "yyyy-MM-ddTHH:mm:ss",
                 CultureInfo.InvariantCulture,
                 DateTimeStyles.None,
                 out var localDateTime))
         {
-            ModelState.AddModelError(nameof(Input.RecordedAtSydneyLocal), "Use a valid date and time.");
+            ModelState.AddModelError(nameof(Input.RecordedDateTimeLocal), "Use a valid date and time.");
             return Page();
         }
 
@@ -122,7 +122,7 @@ public sealed class EditModel(INoiseLogStore noiseLogStore) : PageModel
 
         var updated = new NoiseLogEntry
         {
-            RecordedAtSydney = new DateTimeOffset(localDateTime, offset),
+            RecordedDateTime = new DateTimeOffset(localDateTime, offset),
             NoiseSources = Input.NoiseSources,
             Intensity = Input.Intensity,
             Loudness = Input.Loudness,

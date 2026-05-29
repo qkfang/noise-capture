@@ -4,7 +4,9 @@ public sealed class NoiseLogEntry
 {
     public int Id { get; init; }
 
-    public DateTimeOffset RecordedAtSydney { get; init; }
+    public DateTimeOffset RecordedDateTime { get; init; }
+
+    public DateTimeOffset CreateDateTime { get; init; }
 
     public IReadOnlyList<string> NoiseSources { get; init; } = [];
 

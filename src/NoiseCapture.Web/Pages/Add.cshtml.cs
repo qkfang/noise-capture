@@ -74,13 +74,13 @@ public sealed class AddModel(INoiseLogStore noiseLogStore) : PageModel
         }
 
         if (!DateTime.TryParseExact(
-                Input.RecordedAtSydneyLocal,
-                "yyyy-MM-ddTHH:mm",
+                Input.RecordedDateTimeLocal,
+                "yyyy-MM-ddTHH:mm:ss",
                 CultureInfo.InvariantCulture,
                 DateTimeStyles.None,
                 out var localDateTime))
         {
-            ModelState.AddModelError(nameof(Input.RecordedAtSydneyLocal), "Use a valid date and time.");
+            ModelState.AddModelError(nameof(Input.RecordedDateTimeLocal), "Use a valid date and time.");
             return Page();
         }
 
@@ -88,7 +88,7 @@ public sealed class AddModel(INoiseLogStore noiseLogStore) : PageModel
 
         var entry = new NoiseLogEntry
         {
-            RecordedAtSydney = new DateTimeOffset(localDateTime, offset),
+            RecordedDateTime = new DateTimeOffset(localDateTime, offset),
             NoiseSources = Input.NoiseSources,
             Intensity = Input.Intensity,
             Loudness = Input.Loudness,
@@ -112,7 +112,7 @@ public sealed class AddModel(INoiseLogStore noiseLogStore) : PageModel
         {
             Input = new NoiseLogInput
             {
-                RecordedAtSydneyLocal = ToLocalDateTimeValue(ToSydneyNow()),
+                RecordedDateTimeLocal = ToLocalDateTimeValue(ToSydneyNow()),
                 NoiseSources = [NoiseSources[0]],
                 Intensity = IntensityLevels[1],
                 Loudness = LoudnessLevels[1],
@@ -128,7 +128,7 @@ public sealed class AddModel(INoiseLogStore noiseLogStore) : PageModel
 
         Input = new NoiseLogInput
         {
-            RecordedAtSydneyLocal = ToLocalDateTimeValue(ToSydneyNow()),
+            RecordedDateTimeLocal = ToLocalDateTimeValue(ToSydneyNow()),
             NoiseSources = [.. lastEntry.NoiseSources],
             Intensity = IntensityLevels.Contains(lastEntry.Intensity) ? lastEntry.Intensity : IntensityLevels[1],
             Loudness = LoudnessLevels.Contains(lastEntry.Loudness) ? lastEntry.Loudness : LoudnessLevels[1],
@@ -150,6 +150,6 @@ public sealed class AddModel(INoiseLogStore noiseLogStore) : PageModel
 
     private static string ToLocalDateTimeValue(DateTimeOffset value)
     {
-        return value.ToString("yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture);
+        return value.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
     }
 }
