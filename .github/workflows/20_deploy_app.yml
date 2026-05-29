@@ -1,4 +1,4 @@
-name: 20 Deploy Backend
+name: 20 Deploy App
 
 on:
   push:

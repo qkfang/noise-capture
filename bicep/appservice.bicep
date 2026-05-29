@@ -59,6 +59,10 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
           value: logsContainerName
         }
         {
+          name: 'NoiseStorage__TenantId'
+          value: subscription().tenantId
+        }
+        {
           name: 'LocalData__FolderPath'
           value: localDataFolder
         }

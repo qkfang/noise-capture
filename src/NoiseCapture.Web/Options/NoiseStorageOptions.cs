@@ -9,4 +9,6 @@ public sealed class NoiseStorageOptions
     public string ContainerName { get; set; } = "noise-logs";
 
     public string BlobName { get; set; } = "noise-log.json";
+
+    public string? TenantId { get; set; }
 }

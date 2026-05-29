@@ -95,7 +95,7 @@ public sealed class AddModel(INoiseLogStore noiseLogStore) : PageModel
             Loudness = Input.Loudness,
             Tone = Input.Tone,
             Locations = Input.Locations,
-            Note = Input.Note.Trim(),
+            Note = Input.Note?.Trim() ?? string.Empty,
             ContinuedFromLast = Input.ContinuedFromLast
         };
 

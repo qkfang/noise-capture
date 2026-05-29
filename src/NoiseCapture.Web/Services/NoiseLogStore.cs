@@ -14,14 +14,17 @@ public sealed class NoiseLogStore : INoiseLogStore
     private readonly ILogger<NoiseLogStore> _logger;
     private readonly LocalDataOptions _localDataOptions;
     private readonly NoiseStorageOptions _storageOptions;
+    private readonly IHostEnvironment _hostEnvironment;
 
     public NoiseLogStore(
         IOptions<LocalDataOptions> localDataOptions,
         IOptions<NoiseStorageOptions> storageOptions,
+        IHostEnvironment hostEnvironment,
         ILogger<NoiseLogStore> logger)
     {
         _localDataOptions = localDataOptions.Value;
         _storageOptions = storageOptions.Value;
+        _hostEnvironment = hostEnvironment;
         _logger = logger;
     }
 
@@ -179,7 +182,7 @@ public sealed class NoiseLogStore : INoiseLogStore
 
         if (!Path.IsPathRooted(folder))
         {
-            folder = Path.Combine(AppContext.BaseDirectory, folder);
+            folder = Path.Combine(_hostEnvironment.ContentRootPath, folder);
         }
 
         Directory.CreateDirectory(folder);
@@ -194,7 +197,16 @@ public sealed class NoiseLogStore : INoiseLogStore
             return;
         }
 
-        var blobServiceClient = new BlobServiceClient(new Uri(_storageOptions.AccountUrl), new DefaultAzureCredential());
+        var credentialOptions = new DefaultAzureCredentialOptions();
+        if (!string.IsNullOrWhiteSpace(_storageOptions.TenantId))
+        {
+            credentialOptions.TenantId = _storageOptions.TenantId;
+            credentialOptions.VisualStudioTenantId = _storageOptions.TenantId;
+            credentialOptions.SharedTokenCacheTenantId = _storageOptions.TenantId;
+            credentialOptions.InteractiveBrowserTenantId = _storageOptions.TenantId;
+        }
+
+        var blobServiceClient = new BlobServiceClient(new Uri(_storageOptions.AccountUrl), new DefaultAzureCredential(credentialOptions));
         var containerClient = blobServiceClient.GetBlobContainerClient(_storageOptions.ContainerName);
         await containerClient.CreateIfNotExistsAsync(cancellationToken: cancellationToken);
 
