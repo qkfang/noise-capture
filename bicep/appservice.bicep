@@ -19,13 +19,6 @@ param sqlServerFullyQualifiedDomainName string
 @description('Azure SQL Database name')
 param sqlDatabaseName string
 
-@description('Azure SQL administrator login')
-param sqlAdministratorLogin string
-
-@secure()
-@description('Azure SQL administrator password')
-param sqlAdministratorPassword string
-
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   name: appServicePlanName
   location: location
@@ -65,7 +58,7 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
         }
         {
           name: 'ConnectionStrings__NoiseCaptureDatabase'
-          value: 'Server=tcp:${sqlServerFullyQualifiedDomainName},1433;Initial Catalog=${sqlDatabaseName};Persist Security Info=False;User ID=${sqlAdministratorLogin};******;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
+          value: 'Server=tcp:${sqlServerFullyQualifiedDomainName},1433;Initial Catalog=${sqlDatabaseName};Authentication=Active Directory Default;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
         }
       ]
     }

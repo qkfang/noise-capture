@@ -7,12 +7,11 @@ param sqlServerName string
 @description('Azure SQL Database name')
 param sqlDatabaseName string
 
-@description('Azure SQL administrator login')
-param sqlAdministratorLogin string
+@description('Azure AD administrator login (email)')
+param sqlAzureAdAdminLogin string
 
-@secure()
-@description('Azure SQL administrator password')
-param sqlAdministratorPassword string
+@description('Azure AD administrator object ID (run: az ad user show --id <email> --query id -o tsv)')
+param sqlAzureAdAdminObjectId string
 
 @description('DTU-based Azure SQL database SKU')
 param sqlDatabaseSku string
@@ -39,11 +38,16 @@ resource sqlServer 'Microsoft.Sql/servers@2023-08-01-preview' = {
   name: sqlServerName
   location: location
   properties: {
-    administratorLogin: sqlAdministratorLogin
-    administratorLoginPassword: sqlAdministratorPassword
     version: '12.0'
     publicNetworkAccess: 'Enabled'
     minimalTlsVersion: '1.2'
+    administrators: {
+      administratorType: 'ActiveDirectory'
+      login: sqlAzureAdAdminLogin
+      sid: sqlAzureAdAdminObjectId
+      tenantId: subscription().tenantId
+      azureADOnlyAuthentication: true
+    }
   }
 }
 

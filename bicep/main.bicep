@@ -14,12 +14,11 @@ param baseName string = 'noisecap'
 ])
 param appServiceSku string = 'S1'
 
-@description('Administrator login for Azure SQL Server')
-param sqlAdministratorLogin string = 'noisecaptureadmin'
+@description('Azure AD administrator login (email) for Azure SQL Server')
+param sqlAzureAdAdminLogin string = 'danielfang@MngEnvMCAP951655.onmicrosoft.com'
 
-@secure()
-@description('Administrator password for Azure SQL Server')
-param sqlAdministratorPassword string
+@description('Azure AD administrator object ID for Azure SQL Server')
+param sqlAzureAdAdminObjectId string
 
 @description('DTU-based Azure SQL database SKU')
 @allowed([
@@ -52,8 +51,8 @@ module sql 'sql.bicep' = {
     location: location
     sqlServerName: sqlServerName
     sqlDatabaseName: sqlDatabaseName
-    sqlAdministratorLogin: sqlAdministratorLogin
-    sqlAdministratorPassword: sqlAdministratorPassword
+    sqlAzureAdAdminLogin: sqlAzureAdAdminLogin
+    sqlAzureAdAdminObjectId: sqlAzureAdAdminObjectId
     sqlDatabaseSku: sqlDatabaseSku
   }
 }
@@ -68,8 +67,6 @@ module appService 'appservice.bicep' = {
     appInsightsConnectionString: monitoring.outputs.appInsightsConnectionString
     sqlServerFullyQualifiedDomainName: sql.outputs.sqlServerFullyQualifiedDomainName
     sqlDatabaseName: sql.outputs.sqlDatabaseName
-    sqlAdministratorLogin: sqlAdministratorLogin
-    sqlAdministratorPassword: sqlAdministratorPassword
   }
 }
 
