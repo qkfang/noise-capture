@@ -34,11 +34,10 @@
                 <thead>
                     <tr>
                         <th scope="col">When (Sydney)</th>
-                        <th scope="col">Sources</th>
                         <th scope="col">Intensity</th>
                         <th scope="col">Loudness</th>
                         <th scope="col">Tone</th>
-                        <th scope="col">Location</th>
+                        <th scope="col" title="Continued from last entry">Cont.</th>
                         <th scope="col" class="text-end">Actions</th>
                     </tr>
                 </thead>
@@ -50,11 +49,10 @@
                         var noteClass = i % 2 == 0 ? "entry-note-a" : "entry-note-b";
                         <tr class="@rowClass">
                             <td>@entry.RecordedAtSydney.ToString("yyyy-MM-dd HH:mm")</td>
-                            <td>@string.Join(", ", entry.NoiseSources)</td>
                             <td>@entry.Intensity</td>
                             <td>@entry.Loudness</td>
                             <td>@entry.Tone</td>
-                            <td>@string.Join(", ", entry.Locations)</td>
+                            <td>@(entry.ContinuedFromLast ? "Yes" : "No")</td>
                             <td class="text-end">
                                 <a asp-page="/Edit" asp-route-recordedAt="@entry.RecordedAtSydney.ToString("o")"
                                    class="btn btn-sm btn-outline-primary me-1">Edit</a>
@@ -67,7 +65,16 @@
                             </td>
                         </tr>
                         <tr class="@noteClass">
-                            <td colspan="7" class="small text-muted">
+                            <td colspan="6" class="small">
+                                <strong>Sources:</strong>
+                                @(entry.NoiseSources.Count == 0 ? "—" : string.Join(", ", entry.NoiseSources))
+                                &nbsp;&nbsp;
+                                <strong>Location:</strong>
+                                @(entry.Locations.Count == 0 ? "—" : string.Join(", ", entry.Locations))
+                            </td>
+                        </tr>
+                        <tr class="@noteClass">
+                            <td colspan="6" class="small text-muted">
                                 <strong>How it impacts you:</strong>
                                 @(string.IsNullOrWhiteSpace(entry.Note) ? "—" : entry.Note)
                             </td>
