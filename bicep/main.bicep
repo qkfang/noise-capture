@@ -18,11 +18,11 @@ param appServiceSku string = 'S1'
 param logsContainerName string = 'noise-logs'
 
 var uniqueSuffix = uniqueString(resourceGroup().id)
-var logAnalyticsName = '${baseName}-law-${uniqueSuffix}'
-var appInsightsName = '${baseName}-appi-${uniqueSuffix}'
-var storageAccountName = toLower('${baseName}${uniqueSuffix}')
+var logAnalyticsName = '${baseName}-law'
+var appInsightsName = '${baseName}-appi'
+var storageAccountName = toLower('${baseName}')
 var appServicePlanName = '${baseName}-plan'
-var webAppName = '${baseName}-web-${uniqueSuffix}'
+var webAppName = '${baseName}-web'
 
 module monitoring 'monitoring.bicep' = {
   name: 'monitoring'
