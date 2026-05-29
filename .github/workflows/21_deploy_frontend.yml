@@ -1,0 +1,53 @@
+name: 21 Deploy Frontend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/frontend/**"
+      - ".github/workflows/21_deploy_frontend.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: src/frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: src/frontend
+        run: npm ci
+
+      - name: Build
+        working-directory: src/frontend
+        env:
+          VITE_APP_BASE_URL: https://app-zc-backend.azurewebsites.net
+        run: npm run build
+
+      - name: Stage static site for Azure App Service (Linux/Node)
+        run: |
+          mkdir -p ./publish
+          cp -r src/frontend/dist/. ./publish/
+
+      - name: Azure CLI Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: app-zc-frontend
+          package: ./publish

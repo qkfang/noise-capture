@@ -1,0 +1,45 @@
+name: 20 Deploy Backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/backend/**"
+      - ".github/workflows/20_deploy_backend.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'preview'
+
+      - name: Restore
+        working-directory: src/backend
+        run: dotnet restore zc-backend.csproj
+
+      - name: Publish
+        working-directory: src/backend
+        run: dotnet publish zc-backend.csproj -c Release -o ${{ github.workspace }}/publish --no-restore
+
+      - name: Azure CLI Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: app-zc-backend
+          package: ${{ github.workspace }}/publish
