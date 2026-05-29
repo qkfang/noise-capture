@@ -33,6 +33,7 @@
             <table class="table table-hover align-middle table-entries">
                 <thead>
                     <tr>
+                        <th scope="col">#</th>
                         <th scope="col">When (Sydney)</th>
                         <th scope="col">Sources</th>
                         <th scope="col">Intensity</th>
@@ -49,7 +50,8 @@
                         var rowClass = i % 2 == 0 ? "entry-row-a" : "entry-row-b";
                         var noteClass = i % 2 == 0 ? "entry-note-a" : "entry-note-b";
                         <tr class="@rowClass">
-                            <td>@entry.RecordedAtSydney.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>@entry.Id</td>
+                            <td>@SydneyTime.Convert(entry.RecordedAtSydney).ToString("yyyy-MM-dd HH:mm")</td>
                             <td>@string.Join(", ", entry.NoiseSources)</td>
                             <td>@entry.Intensity</td>
                             <td>@entry.Loudness</td>

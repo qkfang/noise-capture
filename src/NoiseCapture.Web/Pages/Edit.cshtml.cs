@@ -27,6 +27,8 @@ public sealed class EditModel(INoiseLogStore noiseLogStore) : PageModel
     [BindProperty]
     public string OriginalRecordedAt { get; set; } = string.Empty;
 
+    public int EntryId { get; private set; }
+
     public IReadOnlyList<string> NoiseSourceOptions => NoiseSources;
     public IReadOnlyList<string> IntensityOptions => IntensityLevels;
     public IReadOnlyList<string> LoudnessOptions => LoudnessLevels;
@@ -50,6 +52,7 @@ public sealed class EditModel(INoiseLogStore noiseLogStore) : PageModel
         }
 
         OriginalRecordedAt = entry.RecordedAtSydney.ToString("o", CultureInfo.InvariantCulture);
+        EntryId = entry.Id;
         Input = new NoiseLogInput
         {
             RecordedAtSydneyLocal = entry.RecordedAtSydney.ToString("yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture),

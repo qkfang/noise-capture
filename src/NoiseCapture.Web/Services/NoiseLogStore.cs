@@ -111,6 +111,7 @@ public sealed class NoiseLogStore(NoiseCaptureDbContext dbContext) : INoiseLogSt
     {
         return entry => new NoiseLogEntry
         {
+            Id = entry.Id,
             RecordedAtSydney = entry.RecordedAtSydney,
             NoiseSources = entry.NoiseSources
                 .OrderBy(noiseSource => noiseSource.SortOrder)

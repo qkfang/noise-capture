@@ -2,6 +2,8 @@ namespace NoiseCapture.Web.Models;
 
 public sealed class NoiseLogEntry
 {
+    public int Id { get; init; }
+
     public DateTimeOffset RecordedAtSydney { get; init; }
 
     public IReadOnlyList<string> NoiseSources { get; init; } = [];

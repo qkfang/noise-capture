@@ -11,7 +11,6 @@ public sealed class NoiseCaptureDbContext(DbContextOptions<NoiseCaptureDbContext
         var entry = modelBuilder.Entity<NoiseLogEntryEntity>();
         entry.ToTable("NoiseLogEntries");
         entry.HasKey(item => item.Id);
-        entry.HasIndex(item => item.RecordedAtSydney).IsUnique();
         entry.Property(item => item.RecordedAtSydney).IsRequired();
         entry.Property(item => item.Intensity).HasMaxLength(32).IsRequired();
         entry.Property(item => item.Loudness).HasMaxLength(32).IsRequired();
