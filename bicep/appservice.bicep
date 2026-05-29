@@ -1,190 +1,69 @@
-@description('App Service Plan name')
-param appServicePlanName string
-
-@description('Frontend Web App name')
-param frontendAppName string
-
-@description('Backend Web App name')
-param backendAppName string
-
-@description('Azure region')
+@description('Azure location')
 param location string
 
-@description('Resource tags')
-param tags object = {}
+@description('Base name for resources')
+param baseName string
 
-@description('App Service Plan SKU name')
-param skuName string = 'S1'
+@description('SKU for App Service plan')
+param appServiceSku string
 
-@description('App Service Plan SKU tier')
-param skuTier string = 'Standard'
-
-@description('Application Insights connection string')
+@description('App Insights connection string')
 param appInsightsConnectionString string
 
-@description('Application Insights instrumentation key')
-param appInsightsInstrumentationKey string
+@description('Storage account name used for noise log blobs')
+param storageAccountName string
 
-@description('Linux runtime stack for the frontend (src/ui) Web App')
-param frontendLinuxFxVersion string = 'NODE|20-lts'
+@description('Storage container name used for noise log blobs')
+param logsContainerName string
 
-@description('Linux runtime stack for the backend (src/app) Web App')
-param backendLinuxFxVersion string = 'DOTNETCORE|10.0'
+@description('Folder path for local JSON persistence')
+param localDataFolder string = '/home/site/data'
 
-@description('Startup command for the frontend Web App (serves the static Vite build from /home/site/wwwroot)')
-param frontendAppCommandLine string = 'pm2 serve /home/site/wwwroot --no-daemon --spa'
-
-@description('Startup command for the backend Web App (.NET self-contained app entry)')
-param backendAppCommandLine string = 'dotnet zc-backend.dll'
-
-@description('Azure AI Foundry project endpoint URL consumed by the backend ClaimsAgent factory')
-param projectEndpoint string
-
-@description('Default chat model deployment name (e.g. gpt-5.4)')
-param modelDeploymentName string
-
-@description('Tenant ID used by DefaultAzureCredential in the backend')
-param tenantId string = tenant().tenantId
-
-@description('Foundry connection ID for the claims knowledge Azure AI Search index (optional)')
-param searchConnectionId string = ''
-
-@description('Azure AI Search index name for the claims knowledge base')
-param searchIndexName string = 'claims_knowledge'
-
-@description('Foundry project Bing grounding connection ID')
-param bingConnectionId string
+var appServicePlanName = '${baseName}-plan'
+var webAppName = '${baseName}-web-${uniqueString(resourceGroup().id)}'
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   name: appServicePlanName
   location: location
-  tags: tags
   sku: {
-    name: skuName
-    tier: skuTier
+    name: appServiceSku
   }
-  kind: 'linux'
-  properties: {
-    reserved: true
-  }
+  kind: 'app'
 }
 
-var commonAppSettings = [
-  {
-    name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-    value: appInsightsConnectionString
-  }
-  {
-    name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
-    value: appInsightsInstrumentationKey
-  }
-  {
-    name: 'ApplicationInsightsAgent_EXTENSION_VERSION'
-    value: '~3'
-  }
-  {
-    name: 'WEBSITES_ENABLE_APP_SERVICE_STORAGE'
-    value: 'false'
-  }
-]
-
-resource frontendApp 'Microsoft.Web/sites@2023-12-01' = {
-  name: frontendAppName
+resource webApp 'Microsoft.Web/sites@2023-12-01' = {
+  name: webAppName
   location: location
-  tags: tags
+  kind: 'app,linux'
   identity: {
     type: 'SystemAssigned'
   }
   properties: {
     serverFarmId: appServicePlan.id
-    httpsOnly: true
     siteConfig: {
-      linuxFxVersion: frontendLinuxFxVersion
-      appCommandLine: frontendAppCommandLine
-      alwaysOn: true
-      ftpsState: 'Disabled'
-      minTlsVersion: '1.2'
-      http20Enabled: true
-      appSettings: concat(commonAppSettings, [
+      linuxFxVersion: 'DOTNETCORE|10.0'
+      appSettings: [
         {
-          name: 'WEBSITE_NODE_DEFAULT_VERSION'
-          value: '~20'
+          name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+          value: appInsightsConnectionString
         }
         {
-          name: 'BACKEND_APP_URL'
-          value: 'https://${backendApp.properties.defaultHostName}'
+          name: 'NoiseStorage__AccountUrl'
+          value: 'https://${storageAccountName}.blob.core.windows.net'
         }
-      ])
+        {
+          name: 'NoiseStorage__ContainerName'
+          value: logsContainerName
+        }
+        {
+          name: 'LocalData__FolderPath'
+          value: localDataFolder
+        }
+      ]
     }
+    httpsOnly: true
   }
 }
 
-resource backendApp 'Microsoft.Web/sites@2023-12-01' = {
-  name: backendAppName
-  location: location
-  tags: tags
-  identity: {
-    type: 'SystemAssigned'
-  }
-  properties: {
-    serverFarmId: appServicePlan.id
-    httpsOnly: true
-    siteConfig: {
-      linuxFxVersion: backendLinuxFxVersion
-      appCommandLine: backendAppCommandLine
-      alwaysOn: true
-      ftpsState: 'Disabled'
-      minTlsVersion: '1.2'
-      http20Enabled: true
-      appSettings: concat(commonAppSettings, [
-        {
-          name: 'ASPNETCORE_ENVIRONMENT'
-          value: 'Production'
-        }
-        {
-          name: 'ASPNETCORE_FORWARDEDHEADERS_ENABLED'
-          value: 'true'
-        }
-        {
-          name: 'AZURE_AI_PROJECT_ENDPOINT'
-          value: projectEndpoint
-        }
-        {
-          name: 'AZURE_AI_MODEL_DEPLOYMENT_NAME'
-          value: modelDeploymentName
-        }
-        {
-          name: 'AZURE_TENANT_ID'
-          value: tenantId
-        }
-        {
-          name: 'AZURE_AI_SEARCH_CONNECTION_ID'
-          value: searchConnectionId
-        }
-        {
-          name: 'AZURE_AI_SEARCH_INDEX_NAME'
-          value: searchIndexName
-        }
-        {
-          name: 'AZURE_BING_CONNECTION_ID'
-          value: bingConnectionId
-        }
-        {
-          name: 'APP_MCP_URL'
-          value: 'https://${backendAppName}.azurewebsites.net'
-        }
-      ])
-    }
-  }
-}
-
-output appServicePlanId string = appServicePlan.id
-output appServicePlanName string = appServicePlan.name
-output frontendAppName string = frontendApp.name
-output frontendAppHostName string = frontendApp.properties.defaultHostName
-output frontendAppUrl string = 'https://${frontendApp.properties.defaultHostName}'
-output frontendPrincipalId string = frontendApp.identity.principalId
-output backendAppName string = backendApp.name
-output backendAppHostName string = backendApp.properties.defaultHostName
-output backendAppUrl string = 'https://${backendApp.properties.defaultHostName}'
-output backendPrincipalId string = backendApp.identity.principalId
+output webAppName string = webApp.name
+output principalId string = webApp.identity.principalId
