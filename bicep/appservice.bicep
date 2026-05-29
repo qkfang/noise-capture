@@ -13,14 +13,18 @@ param appServiceSku string
 @description('App Insights connection string')
 param appInsightsConnectionString string
 
-@description('Storage account name used for noise log blobs')
-param storageAccountName string
+@description('Azure SQL Server fully qualified domain name')
+param sqlServerFullyQualifiedDomainName string
 
-@description('Storage container name used for noise log blobs')
-param logsContainerName string
+@description('Azure SQL Database name')
+param sqlDatabaseName string
 
-@description('Folder path for local JSON persistence')
-param localDataFolder string = '/home/site/data'
+@description('Azure SQL administrator login')
+param sqlAdministratorLogin string
+
+@secure()
+@description('Azure SQL administrator password')
+param sqlAdministratorPassword string
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   name: appServicePlanName
@@ -60,20 +64,8 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
           value: '1'
         }
         {
-          name: 'NoiseStorage__AccountUrl'
-          value: 'https://${storageAccountName}.blob.${environment().suffixes.storage}'
-        }
-        {
-          name: 'NoiseStorage__ContainerName'
-          value: logsContainerName
-        }
-        {
-          name: 'NoiseStorage__TenantId'
-          value: subscription().tenantId
-        }
-        {
-          name: 'LocalData__FolderPath'
-          value: localDataFolder
+          name: 'ConnectionStrings__NoiseCaptureDatabase'
+          value: 'Server=tcp:${sqlServerFullyQualifiedDomainName},1433;Initial Catalog=${sqlDatabaseName};Persist Security Info=False;User ID=${sqlAdministratorLogin};******;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
         }
       ]
     }

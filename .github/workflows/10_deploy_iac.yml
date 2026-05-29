@@ -32,4 +32,5 @@ jobs:
             --name 'noise-capture-dev' \
             --resource-group 'rg-noise-capture' \
             --template-file './main.bicep' \
-            --parameters './main.bicepparam'
+            --parameters './main.bicepparam' \
+            --parameters sqlAdministratorPassword='${{ secrets.AZURE_SQL_ADMIN_PASSWORD }}'
