@@ -14,7 +14,7 @@ public sealed class NoiseLogEntry
 
     public IReadOnlyList<string> Locations { get; init; } = [];
 
-    public string Note { get; init; } = string.Empty;
+    public string? Note { get; init; }
 
     public string? Weather { get; init; }
 

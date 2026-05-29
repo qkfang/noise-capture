@@ -95,7 +95,7 @@ public sealed class AddModel(INoiseLogStore noiseLogStore) : PageModel
             Loudness = Input.Loudness,
             Tone = Input.Tone,
             Locations = Input.Locations,
-            Note = Input.Note?.Trim() ?? string.Empty,
+            Note = string.IsNullOrWhiteSpace(Input.Note) ? null : Input.Note.Trim(),
             Weather = string.IsNullOrWhiteSpace(Input.Weather) ? null : Input.Weather.Trim(),
             ContinuedFromLast = Input.ContinuedFromLast
         };
@@ -119,7 +119,7 @@ public sealed class AddModel(INoiseLogStore noiseLogStore) : PageModel
                 Loudness = LoudnessLevels[0],
                 Tone = ToneOptions[0],
                 Locations = [Locations[0]],
-                Note = string.Empty,
+                Note = null,
                 Weather = null,
                 ContinuedFromLast = false
             };

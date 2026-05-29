@@ -25,7 +25,7 @@ public sealed class NoiseLogInput
     [MinLength(1, ErrorMessage = "Select at least one location.")]
     public List<string> Locations { get; set; } = [];
 
-    [Display(Name = "How it impact you")]
+    [Display(Name = "How it impacts you")]
     [StringLength(2000)]
     public string? Note { get; set; }
 
