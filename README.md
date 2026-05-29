@@ -16,17 +16,15 @@ A .NET 10 Razor Pages app provides a mobile-friendly form for noise impact entri
 
 ### Data flow
 
-1. Each new entry is appended to a local JSON file (`noise-log.json`) in `LocalData:FolderPath`.
-2. The same JSON file is then uploaded to Azure Blob Storage.
+1. Each new entry is stored in Azure SQL through Entity Framework Core.
+2. The app applies pending Entity Framework migrations during startup.
+3. JSON export remains available from the list page and is generated from database rows.
 
 ## Configuration
 
 `src/NoiseCapture.Web/appsettings.json`
 
-- `LocalData:FolderPath` - local folder for JSON persistence
-- `NoiseStorage:AccountUrl` - blob service URL (`https://<account>.blob.core.windows.net`)
-- `NoiseStorage:ContainerName` - blob container name
-- `NoiseStorage:BlobName` - blob file name
+- `ConnectionStrings:NoiseCaptureDatabase` - SQL Server connection string used by Entity Framework Core
 
 ## Infrastructure (`bicep`)
 
@@ -34,11 +32,12 @@ Bicep now provisions and configures:
 
 - App Service plan + Linux Web App (.NET 10)
 - Log Analytics + Application Insights
-- Storage account + `noise-logs` blob container
-- Web app app settings for local data path and blob configuration
-- RBAC role assignment: `Storage Blob Data Contributor` for the web app managed identity
+- Azure SQL Server + DTU-based Azure SQL Database
+- Web app connection string for the SQL database
 
 ## Deploy
 
 - Infrastructure workflow: `.github/workflows/10_deploy_iac.yml`
 - App workflow: `.github/workflows/20_deploy_app.yml`
+
+Set the `AZURE_SQL_ADMIN_PASSWORD` GitHub secret before running the infrastructure deployment workflow.

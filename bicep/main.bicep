@@ -14,18 +14,28 @@ param baseName string = 'noisecap'
 ])
 param appServiceSku string = 'S1'
 
-@description('Blob container name for noise log files')
-param logsContainerName string = 'noise-logs'
+@description('Administrator login for Azure SQL Server')
+param sqlAdministratorLogin string = 'noisecaptureadmin'
 
-@description('Additional principals to grant Storage Blob Data Contributor on the storage account')
-param principals array = []
+@secure()
+@description('Administrator password for Azure SQL Server')
+param sqlAdministratorPassword string
+
+@description('DTU-based Azure SQL database SKU')
+@allowed([
+  'Basic'
+  'S0'
+  'S1'
+])
+param sqlDatabaseSku string = 'S0'
 
 var uniqueSuffix = uniqueString(resourceGroup().id)
 var logAnalyticsName = '${baseName}-law'
 var appInsightsName = '${baseName}-appi'
-var storageAccountName = toLower('${baseName}sa')
 var appServicePlanName = '${baseName}-plan'
 var webAppName = '${baseName}-web'
+var sqlServerName = toLower('${baseName}sql')
+var sqlDatabaseName = '${baseName}-db'
 
 module monitoring 'monitoring.bicep' = {
   name: 'monitoring'
@@ -36,12 +46,15 @@ module monitoring 'monitoring.bicep' = {
   }
 }
 
-module storage 'storage.bicep' = {
-  name: 'storage'
+module sql 'sql.bicep' = {
+  name: 'sql'
   params: {
     location: location
-    storageAccountName: storageAccountName
-    logsContainerName: logsContainerName
+    sqlServerName: sqlServerName
+    sqlDatabaseName: sqlDatabaseName
+    sqlAdministratorLogin: sqlAdministratorLogin
+    sqlAdministratorPassword: sqlAdministratorPassword
+    sqlDatabaseSku: sqlDatabaseSku
   }
 }
 
@@ -53,35 +66,13 @@ module appService 'appservice.bicep' = {
     appServicePlanName: appServicePlanName
     appServiceSku: appServiceSku
     appInsightsConnectionString: monitoring.outputs.appInsightsConnectionString
-    storageAccountName: storageAccountName
-    logsContainerName: logsContainerName
+    sqlServerFullyQualifiedDomainName: sql.outputs.sqlServerFullyQualifiedDomainName
+    sqlDatabaseName: sql.outputs.sqlDatabaseName
+    sqlAdministratorLogin: sqlAdministratorLogin
+    sqlAdministratorPassword: sqlAdministratorPassword
   }
 }
-
-resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' existing = {
-  name: storageAccountName
-}
-
-resource blobDataContributorAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: storageAccount
-  name: guid(storageAccountName, webAppName, 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
-    principalId: appService.outputs.principalId
-    principalType: 'ServicePrincipal'
-  }
-}
-
-resource principalBlobDataContributorAssignments 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for principal in principals: {
-  scope: storageAccount
-  name: guid(storageAccountName, principal.id, 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
-    principalId: principal.id
-    principalType: principal.principalType
-  }
-}]
 
 output webAppName string = appService.outputs.webAppName
-output storageAccountName string = storage.outputs.storageAccountName
-output logsContainerName string = storage.outputs.logsContainerName
+output sqlServerName string = sql.outputs.sqlServerName
+output sqlDatabaseName string = sql.outputs.sqlDatabaseName

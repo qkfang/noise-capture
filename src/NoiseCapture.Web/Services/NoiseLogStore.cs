@@ -1,217 +1,156 @@
-using System.Text.Json;
-using Azure.Identity;
-using Azure.Storage.Blobs;
-using Microsoft.Extensions.Options;
+using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
+using NoiseCapture.Web.Data;
 using NoiseCapture.Web.Models;
-using NoiseCapture.Web.Options;
 
 namespace NoiseCapture.Web.Services;
 
-public sealed class NoiseLogStore : INoiseLogStore
+public sealed class NoiseLogStore(NoiseCaptureDbContext dbContext) : INoiseLogStore
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web) { WriteIndented = true };
-    private readonly SemaphoreSlim _lock = new(1, 1);
-    private readonly ILogger<NoiseLogStore> _logger;
-    private readonly LocalDataOptions _localDataOptions;
-    private readonly NoiseStorageOptions _storageOptions;
-    private readonly IHostEnvironment _hostEnvironment;
-
-    public NoiseLogStore(
-        IOptions<LocalDataOptions> localDataOptions,
-        IOptions<NoiseStorageOptions> storageOptions,
-        IHostEnvironment hostEnvironment,
-        ILogger<NoiseLogStore> logger)
-    {
-        _localDataOptions = localDataOptions.Value;
-        _storageOptions = storageOptions.Value;
-        _hostEnvironment = hostEnvironment;
-        _logger = logger;
-    }
-
     public async Task<NoiseLogEntry?> GetLastEntryAsync(CancellationToken cancellationToken)
     {
-        await _lock.WaitAsync(cancellationToken);
-
-        try
-        {
-            var entries = await ReadEntriesAsync(cancellationToken);
-            return entries.LastOrDefault();
-        }
-        finally
-        {
-            _lock.Release();
-        }
+        return await dbContext.NoiseLogEntries
+            .AsNoTracking()
+            .OrderByDescending(entry => entry.Id)
+            .Select(ProjectToModel())
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<NoiseLogEntry>> GetEntriesAsync(CancellationToken cancellationToken, int? take = null)
     {
-        await _lock.WaitAsync(cancellationToken);
+        var query = dbContext.NoiseLogEntries
+            .AsNoTracking()
+            .OrderByDescending(entry => entry.RecordedAtSydney)
+            .Select(ProjectToModel());
 
-        try
+        if (take.HasValue)
         {
-            var entries = await ReadEntriesAsync(cancellationToken);
-            IEnumerable<NoiseLogEntry> ordered = entries.OrderByDescending(e => e.RecordedAtSydney);
-
-            if (take.HasValue)
-            {
-                ordered = ordered.Take(take.Value);
-            }
-
-            return ordered.ToList();
+            query = query.Take(take.Value);
         }
-        finally
-        {
-            _lock.Release();
-        }
+
+        return await query.ToListAsync(cancellationToken);
     }
 
     public async Task AddEntryAsync(NoiseLogEntry entry, CancellationToken cancellationToken)
     {
-        await _lock.WaitAsync(cancellationToken);
-
-        try
-        {
-            var entries = await ReadEntriesAsync(cancellationToken);
-            entries.Add(entry);
-
-            var json = JsonSerializer.Serialize(entries, JsonOptions);
-            var dataPath = GetLocalDataPath();
-            await File.WriteAllTextAsync(dataPath, json, cancellationToken);
-
-            await UploadToBlobAsync(dataPath, cancellationToken);
-        }
-        finally
-        {
-            _lock.Release();
-        }
+        await dbContext.NoiseLogEntries.AddAsync(MapToEntity(entry), cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<NoiseLogEntry?> GetEntryAsync(DateTimeOffset recordedAtSydney, CancellationToken cancellationToken)
     {
-        await _lock.WaitAsync(cancellationToken);
-
-        try
-        {
-            var entries = await ReadEntriesAsync(cancellationToken);
-            return entries.FirstOrDefault(e => e.RecordedAtSydney == recordedAtSydney);
-        }
-        finally
-        {
-            _lock.Release();
-        }
+        return await dbContext.NoiseLogEntries
+            .AsNoTracking()
+            .Where(entry => entry.RecordedAtSydney == recordedAtSydney)
+            .Select(ProjectToModel())
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     public async Task<bool> UpdateEntryAsync(DateTimeOffset originalRecordedAtSydney, NoiseLogEntry updated, CancellationToken cancellationToken)
     {
-        await _lock.WaitAsync(cancellationToken);
+        var existing = await dbContext.NoiseLogEntries
+            .Include(entry => entry.NoiseSources)
+            .Include(entry => entry.Locations)
+            .FirstOrDefaultAsync(entry => entry.RecordedAtSydney == originalRecordedAtSydney, cancellationToken);
 
-        try
+        if (existing is null)
         {
-            var entries = await ReadEntriesAsync(cancellationToken);
-            var index = entries.FindIndex(e => e.RecordedAtSydney == originalRecordedAtSydney);
+            return false;
+        }
 
-            if (index < 0)
+        existing.RecordedAtSydney = updated.RecordedAtSydney;
+        existing.Intensity = updated.Intensity;
+        existing.Loudness = updated.Loudness;
+        existing.Tone = updated.Tone;
+        existing.Note = updated.Note;
+        existing.ContinuedFromLast = updated.ContinuedFromLast;
+
+        existing.NoiseSources.Clear();
+        foreach (var (value, index) in updated.NoiseSources.Select((value, index) => (value, index)))
+        {
+            existing.NoiseSources.Add(new NoiseLogEntryNoiseSourceEntity
             {
-                return false;
-            }
-
-            entries[index] = updated;
-
-            var json = JsonSerializer.Serialize(entries, JsonOptions);
-            var dataPath = GetLocalDataPath();
-            await File.WriteAllTextAsync(dataPath, json, cancellationToken);
-
-            await UploadToBlobAsync(dataPath, cancellationToken);
-            return true;
+                NoiseLogEntryId = existing.Id,
+                SortOrder = index,
+                Value = value
+            });
         }
-        finally
+
+        existing.Locations.Clear();
+        foreach (var (value, index) in updated.Locations.Select((value, index) => (value, index)))
         {
-            _lock.Release();
+            existing.Locations.Add(new NoiseLogEntryLocationEntity
+            {
+                NoiseLogEntryId = existing.Id,
+                SortOrder = index,
+                Value = value
+            });
         }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
     public async Task<bool> DeleteEntryAsync(DateTimeOffset recordedAtSydney, CancellationToken cancellationToken)
     {
-        await _lock.WaitAsync(cancellationToken);
+        var existing = await dbContext.NoiseLogEntries
+            .FirstOrDefaultAsync(entry => entry.RecordedAtSydney == recordedAtSydney, cancellationToken);
 
-        try
+        if (existing is null)
         {
-            var entries = await ReadEntriesAsync(cancellationToken);
-            var removed = entries.RemoveAll(e => e.RecordedAtSydney == recordedAtSydney);
-
-            if (removed == 0)
-            {
-                return false;
-            }
-
-            var json = JsonSerializer.Serialize(entries, JsonOptions);
-            var dataPath = GetLocalDataPath();
-            await File.WriteAllTextAsync(dataPath, json, cancellationToken);
-
-            await UploadToBlobAsync(dataPath, cancellationToken);
-            return true;
+            return false;
         }
-        finally
-        {
-            _lock.Release();
-        }
+
+        dbContext.NoiseLogEntries.Remove(existing);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
-    private async Task<List<NoiseLogEntry>> ReadEntriesAsync(CancellationToken cancellationToken)
+    private static Expression<Func<NoiseLogEntryEntity, NoiseLogEntry>> ProjectToModel()
     {
-        var dataPath = GetLocalDataPath();
-
-        if (!File.Exists(dataPath))
+        return entry => new NoiseLogEntry
         {
-            return [];
-        }
-
-        var json = await File.ReadAllTextAsync(dataPath, cancellationToken);
-
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return [];
-        }
-
-        return JsonSerializer.Deserialize<List<NoiseLogEntry>>(json, JsonOptions) ?? [];
+            RecordedAtSydney = entry.RecordedAtSydney,
+            NoiseSources = entry.NoiseSources
+                .OrderBy(noiseSource => noiseSource.SortOrder)
+                .Select(noiseSource => noiseSource.Value)
+                .ToList(),
+            Intensity = entry.Intensity,
+            Loudness = entry.Loudness,
+            Tone = entry.Tone,
+            Locations = entry.Locations
+                .OrderBy(location => location.SortOrder)
+                .Select(location => location.Value)
+                .ToList(),
+            Note = entry.Note,
+            ContinuedFromLast = entry.ContinuedFromLast
+        };
     }
 
-    private string GetLocalDataPath()
+    private static NoiseLogEntryEntity MapToEntity(NoiseLogEntry entry)
     {
-        var folder = _localDataOptions.FolderPath;
-
-        if (!Path.IsPathRooted(folder))
+        return new NoiseLogEntryEntity
         {
-            folder = Path.Combine(_hostEnvironment.ContentRootPath, folder);
-        }
-
-        Directory.CreateDirectory(folder);
-        return Path.Combine(folder, "noise-log.json");
-    }
-
-    private async Task UploadToBlobAsync(string localDataPath, CancellationToken cancellationToken)
-    {
-        if (string.IsNullOrWhiteSpace(_storageOptions.AccountUrl))
-        {
-            _logger.LogInformation("NoiseStorage AccountUrl not configured. Skipping blob upload.");
-            return;
-        }
-
-        var credentialOptions = new DefaultAzureCredentialOptions();
-        if (!string.IsNullOrWhiteSpace(_storageOptions.TenantId))
-        {
-            credentialOptions.TenantId = _storageOptions.TenantId;
-            credentialOptions.VisualStudioTenantId = _storageOptions.TenantId;
-            credentialOptions.SharedTokenCacheTenantId = _storageOptions.TenantId;
-            credentialOptions.InteractiveBrowserTenantId = _storageOptions.TenantId;
-        }
-
-        var blobServiceClient = new BlobServiceClient(new Uri(_storageOptions.AccountUrl), new DefaultAzureCredential(credentialOptions));
-        var containerClient = blobServiceClient.GetBlobContainerClient(_storageOptions.ContainerName);
-        await containerClient.CreateIfNotExistsAsync(cancellationToken: cancellationToken);
-
-        var blobClient = containerClient.GetBlobClient(_storageOptions.BlobName);
-        await using var stream = File.OpenRead(localDataPath);
-        await blobClient.UploadAsync(stream, overwrite: true, cancellationToken);
+            RecordedAtSydney = entry.RecordedAtSydney,
+            Intensity = entry.Intensity,
+            Loudness = entry.Loudness,
+            Tone = entry.Tone,
+            Note = entry.Note,
+            ContinuedFromLast = entry.ContinuedFromLast,
+            NoiseSources = entry.NoiseSources
+                .Select((value, index) => new NoiseLogEntryNoiseSourceEntity
+                {
+                    SortOrder = index,
+                    Value = value
+                })
+                .ToList(),
+            Locations = entry.Locations
+                .Select((value, index) => new NoiseLogEntryLocationEntity
+                {
+                    SortOrder = index,
+                    Value = value
+                })
+                .ToList()
+        };
     }
 }
