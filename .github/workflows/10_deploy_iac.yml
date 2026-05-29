@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths:
       - "bicep/**"
+  schedule:
+    - cron: "0 20 * * *"  # 6:00 AM Sydney (AEST, UTC+10)
+    - cron: "0 4 * * *"   # 2:00 PM Sydney (AEST, UTC+10)
   workflow_dispatch:
 
 permissions:
