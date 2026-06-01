@@ -75,7 +75,7 @@ public sealed class AddModel(INoiseLogStore noiseLogStore) : PageModel
 
         if (!DateTime.TryParseExact(
                 Input.RecordedDateTimeLocal,
-                "yyyy-MM-ddTHH:mm:ss",
+                ["yyyy-MM-ddTHH:mm:ss", "yyyy-MM-ddTHH:mm"],
                 CultureInfo.InvariantCulture,
                 DateTimeStyles.None,
                 out var localDateTime))
