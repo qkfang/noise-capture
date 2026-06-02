@@ -10,6 +10,7 @@ public sealed class AddModel(INoiseLogStore noiseLogStore) : PageModel
 {
     private static readonly string[] NoiseSources =
     [
+        "None",
         "Club roof vent",
         "A/C units",
         "Roof vent",
