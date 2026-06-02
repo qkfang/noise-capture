@@ -16,10 +16,10 @@ public sealed class EditModel(INoiseLogStore noiseLogStore) : PageModel
         "Wall vent"
     ];
 
-    private static readonly string[] IntensityLevels = ["High", "Moderate", "Low", "Very Low"];
-    private static readonly string[] LoudnessLevels = ["Nothing", "Unpleasant", "Annoying", "Can't stand"];
-    private static readonly string[] ToneOptions = ["Continuous", "Intermittent", "Impulsive", "Low"];
-    private static readonly string[] Locations = ["Living room", "Bedroom"];
+    private static readonly string[] IntensityLevels = ["High", "Moderate", "Low", "Very Low", "None"];
+    private static readonly string[] LoudnessLevels = ["Nothing", "Audible", "Unpleasant", "Annoying", "Can't stand"];
+    private static readonly string[] ToneOptions = ["Continuous", "Intermittent", "Impulsive", "Low", "None"];
+    private static readonly string[] Locations = ["Living room", "Bedroom", "Playroom"];
 
     [BindProperty]
     public NoiseLogInput Input { get; set; } = new();
